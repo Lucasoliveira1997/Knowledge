@@ -35,13 +35,21 @@ module.exports = app => {
         delete user.confirmedPassword
 
         if (user.id) {
-            app.db('users').update(user).where({ id: user.id })
-                .then(_ => resp.status(202).send(`User ${user.email} was updated`))
-                .catch(error => resp.status(500).send(error))
+            try {
+                const userUpdated = await app.db('users').update(user).where({ id: user.id })
+                return resp.status(202).send(`User ${user.email} was updated - ${userUpdated}`)
+
+            } catch (error) {
+                return resp.status(500).send(error)
+            }
         } else {
-            app.db('users').insert(user)
-                .then(_ => resp.status(201).send(`User ${user.email} was created`))
-                .catch(error => resp.status(500).send(error))
+            try {
+                const userCreated = await app.db('users').insert(user)
+                return resp.status(201).send(`User ${user.email} was created - ${userCreated}`)
+
+            } catch (error) {
+                return resp.status(500).send(error)
+            }
         }
     }
 
