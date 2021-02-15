@@ -36,7 +36,7 @@ module.exports = app => {
 
         if (user.id) {
             try {
-                const userUpdated = await app.db('users').update(user).where({ id: user.id })
+                const userUpdated = await app.db('users').update(user).where({ id: user.id }).whereNull('deletedAt')
                 return resp.status(202).send(`User ${user.email} was updated - ${userUpdated}`)
 
             } catch (error) {
@@ -55,7 +55,7 @@ module.exports = app => {
 
     const get = async (req, resp) => {
         try {
-            const users = await app.db('users').select('id', 'name', 'email', 'admin')
+            const users = await app.db('users').select('id', 'name', 'email', 'admin', 'deletedAt').whereNull('deletedAt')
 
             return resp.status(200).json(users)
 
@@ -65,10 +65,38 @@ module.exports = app => {
     }
 
     const getById = async (req, resp) => {
-        const user = await app.db('users').select('id', 'name', 'email', 'admin').where({ id: req.params.id }).first()
 
-        return resp.status(200).json(user)
+        try {
+            const id = await app.db('users').select('id').where({ id: req.params.id })
+
+            existsOrError(id, 'Id inválido')
+
+            const user = await app.db('users').select('id', 'name', 'email', 'admin')
+                .where({ id: req.params.id }).whereNull('deletedAt').first()
+
+            return resp.status(200).json({ user, id })
+
+        } catch (error) {
+            return resp.status(500).send(error)
+        }
     }
 
-    return { save, get, getById }
+    const remove = async (req, resp) => {
+        try {
+            const articles = await app.db('articles').where({ userId: req.params.id })
+
+            notExistsOrError(articles, 'Existem artigos associados a esse usuário')
+
+            const rowsUpdated = await app.db('users').update({ deletedAt: new Date() }).where({ id: req.params.id })
+
+            existsOrError(rowsUpdated, 'Usuário não encontrado')
+
+            return resp.status(204).send('Usuário deletado')
+
+        } catch (error) {
+            return resp.status(500).send(error)
+        }
+    }
+
+    return { save, get, getById, remove }
 }
