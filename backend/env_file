@@ -1,3 +1,15 @@
 module.exports = {
-    authSecret: ''
+    authSecret: 'hhdhe|fe#@$#@$32\/~~64989|@@#$5569Hhjh@k2HH2(CD^^3JKd4e',
+    postgresDb: {
+        client: 'postgresql',
+        host: '127.0.0.1',
+        port: '5432',
+        database: '',
+        user: '',
+        password: ''
+    },
+    mongoDb: {
+        url: '',
+        options: { useNewUrlParser: true, useUnifiedTopology: true }
+    }
 }

@@ -1,4 +1,6 @@
 const bcrypt = require('bcrypt-nodejs')
+const jwt = require('jwt-simple')
+const { authSecret } = require('../.env')
 
 module.exports = app => {
     const { existsOrError, notExistsOrError, equalsOrError } = app.api.validator
@@ -11,6 +13,15 @@ module.exports = app => {
 
     const save = async (req, resp) => {
         const user = { ...req.body }
+
+        //validate which route is calling the method
+        if(!req.url.startsWith('/users')) user.admin = false
+        
+        let token = req.headers.authorization.split(' ')[1]
+        token = jwt.decode(token, authSecret)
+        if(token.admin == false) {
+            return status(403).send('Você não possui permissão para criar usuários administtradores')
+        }
 
         if (req.params.id) user.id = req.params.id
 
